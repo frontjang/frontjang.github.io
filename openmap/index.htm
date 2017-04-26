@@ -2,6 +2,10 @@
 <html>
 <head>
   <title>openmap</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta charset="utf-8"/>
+
+
 <script
   src="https://code.jquery.com/jquery-3.2.1.min.js"
   integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
@@ -11,12 +15,23 @@
 <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
 <script src='https://unpkg.com/leaflet.gridlayer.googlemutant@latest/Leaflet.GoogleMutant.js'></script>
 <style>
-html, body { height:100%; overflow:hidden } 
-#mapid { height: 100%; }
+body {
+    padding: 0;
+    margin: 0;
+}
+html, body, #mapid {
+    height: 100vh;
+    width: 100vw;
+}
+
+.info { padding: 6px 8px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } 
+.info h4 { margin: 0 0 5px; color: #777; }
+.legend { text-align: left; line-height: 18px; color: #555; } 
+.legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
 </style>
 </head>
 <body>
-   <div id="mapid"></div>
+<div id="mapid"></div>
 
 <script>
 $.urlParam = function(name){
@@ -28,41 +43,150 @@ $.urlParam = function(name){
        return results[1] || 0;
     }
 }
-var url="https://etherpad.wikimedia.org/p/"+$.urlParam('target')+"/export/txt"
-//https://etherpad.wikimedia.org/p/openmap_busan/export/txt
- 
+
+var mymap = L.map('mapid').setView([35.159544, 129.155072], 13);
+var roads = L.gridLayer.googleMutant({
+    type: 'roadmap' // valid values are 'roadmap', 'satellite', 'terrain' and 'hybrid'
+}).addTo(mymap);
+
+var info = L.control();
+
+info.onAdd = function (map) {
+	this._div = L.DomUtil.create('div', 'info');
+	this.update();
+	return this._div;
+};
+
+info.update = function (props) {
+	this._div.innerHTML = '<h4>맛집 정보</h4>' +  (props ?
+		'<b>' + props[0] + '</b><br />' +(props[4]?'<i>'+props[4]+'</i><br />':'') + '<a href='+props[3]+' target=_blank>'+props[3]+'</a>'
+		: '마우스를 마커위에 올리세요');
+};
+
+info.addTo(mymap);
+
+
+
+
+var url="https://etherpad.wikimedia.org/p/openmap_genesis/export/txt"
+openmap_genesis=""
 $.ajax({
 	jsonp: 'jsonp',
 	url: url,
 	type: "GET",
 	success: function(data){
-		data=eval(data);
-		/*
-		for (var i = 0; i < data.length; i++) {
-			marker = new L.marker([data[i][1],data[i][2]]).bindPopup(planes[i][0]).addTo(mymap);
-		}*/
-		for (var i=0; i<data.length; i++) {
-			console.log(data[i]);
-			var popupText = data[i][0];
-			var lat = data[i][1];
-			var lon = data[i][2];
+		openmap_genesis=eval(data);
+		console.log(openmap_genesis);
+		var legend = L.control({position: 'bottomright'});
+		var labels = [];
+		legend.onAdd = function (map) {
 
-			var markerLocation = new L.LatLng(lat, lon);
-			var marker = new L.Marker(markerLocation);
-			mymap.addLayer(marker);
+			var div = L.DomUtil.create('div', 'info legend');
+			for (var i = 0; i < openmap_genesis.length; i++) {
+				labels.push("<a href='?target="+openmap_genesis[i][4]+"'>"+openmap_genesis[i][0]+"</a>");
+			}
 
-			marker.bindPopup(popupText);
-         }
+			div.innerHTML = labels.join('<br>');
+			div.innerHTML = "<h4>맛집 위치 선택</h4>" + div.innerHTML
+			return div;
+		};
+
+		legend.addTo(mymap);
+		 
 	},
 	error: function(jqXHR, textStatus, errorThrown) {
       console.log(jqXHR);
    }
 });
-  
-var mymap = L.map('mapid').setView([35.159544, 129.155072], 13);
-var roads = L.gridLayer.googleMutant({
-    type: 'roadmap' // valid values are 'roadmap', 'satellite', 'terrain' and 'hybrid'
-}).addTo(mymap);
+
+
+
+
+var url="https://etherpad.wikimedia.org/p/"+$.urlParam('target')+"/export/txt"
+//https://etherpad.wikimedia.org/p/openmap_busan/export/txt
+openmap_locData="";
+$.ajax({
+	jsonp: 'jsonp',
+	url: url,
+	type: "GET",
+	success: function(data){
+		openmap_locData=eval(data);
+		/*
+		for (var i = 0; i < data.length; i++) {
+			marker = new L.marker([data[i][1],data[i][2]]).bindPopup(planes[i][0]).addTo(mymap);
+		}*/
+		for (var i=0; i<openmap_locData.length; i++) {
+			console.log(openmap_locData[i]);
+			var popupText = openmap_locData[i][0];
+			var lat = openmap_locData[i][1];
+			var lon = openmap_locData[i][2];
+
+			var markerLocation = new L.LatLng(lat, lon);
+			var marker = new L.Marker(markerLocation);
+			marker.on('mouseover', updateInfo);
+			marker.on('mouseout', removeInfo);
+			mymap.addLayer(marker);
+			
+			marker.bindPopup(popupText);
+			
+			if(i==0) mymap.setView(new L.LatLng(lat, lon), findZoom(), { animation: true }); 
+         }
+		 
+
+	},
+	error: function(jqXHR, textStatus, errorThrown) {
+      console.log(jqXHR);
+   }
+});
+
+function findZoom(){
+	for (var i = 0; i < openmap_genesis.length; i++) {
+		if(openmap_genesis[i][4]==$.urlParam('target')) {
+			console.log(openmap_genesis[i]);
+			return openmap_genesis[i][3];
+		}
+	}
+}
+
+function updateInfo(e){
+	console.log(e);
+
+	
+	var latlng = e.latlng;
+	var locinfo=findInfo(latlng);
+	var layer = e.target;
+	/*
+	layer.setStyle({
+	weight: 5,
+	color: '#666',
+	dashArray: '',
+	fillOpacity: 0.7
+	});
+
+	if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+		layer.bringToFront();
+	}
+*/
+	info.update(locinfo);
+	
+}
+
+function removeInfo(e){
+	console.log(e);
+	var layer = e.target;
+	
+	//mymap.resetStyle(layer);
+	//info.update();
+}
+
+function findInfo(latlng){
+	for (var i = 0; i < openmap_locData.length; i++) {
+		if(openmap_locData[i][1]==latlng.lat && openmap_locData[i][2]==latlng.lng) {
+			console.log(openmap_locData[i]);
+			return openmap_locData[i];
+		}
+	}
+}
 </script>
 </body>
 </html>
