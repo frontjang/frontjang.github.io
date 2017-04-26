@@ -127,6 +127,7 @@ $.ajax({
 			var marker = new L.Marker(markerLocation);
 			marker.on('mouseover', updateInfo);
 			marker.on('mouseout', removeInfo);
+			marker.on('click', zoomToFeature);
 			mymap.addLayer(marker);
 			
 			marker.bindPopup(popupText);
@@ -188,6 +189,12 @@ function findInfo(latlng){
 			return openmap_locData[i];
 		}
 	}
+}
+	
+function zoomToFeature(e) {
+	var bounds = new L.LatLngBounds();
+	bounds.extend(e.latlng);
+	mymap.fitBounds(bounds);
 }
 </script>
 </body>
