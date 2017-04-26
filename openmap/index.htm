@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>openmap</title>
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script src="http://maps.google.com/maps/api/js?key=AIzaSyAFlDQwXmt0QVXWOPkeYsqhpdvCkRebQp8"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+<script src='https://unpkg.com/leaflet.gridlayer.googlemutant@latest/Leaflet.GoogleMutant.js'></script>
+<style>
+html, body { height:100%; overflow:hidden } 
+#mapid { height: 100%; }
+</style>
+</head>
+<body>
+   <div id="mapid"></div>
+
+<script>
+$.urlParam = function(name){
+    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    if (results==null){
+       return "openmap_busan";
+    }
+    else{
+       return results[1] || 0;
+    }
+}
+var url="https://etherpad.wikimedia.org/p/"+$.urlParam('target')+"/export/txt"
+//https://etherpad.wikimedia.org/p/openmap_busan/export/txt
+ 
+$.ajax({
+	jsonp: 'jsonp',
+	url: url,
+	type: "GET",
+	success: function(data){
+		data=eval(data);
+		/*
+		for (var i = 0; i < data.length; i++) {
+			marker = new L.marker([data[i][1],data[i][2]]).bindPopup(planes[i][0]).addTo(mymap);
+		}*/
+		for (var i=0; i<data.length; i++) {
+			console.log(data[i]);
+			var popupText = data[i][0];
+			var lat = data[i][1];
+			var lon = data[i][2];
+
+			var markerLocation = new L.LatLng(lat, lon);
+			var marker = new L.Marker(markerLocation);
+			mymap.addLayer(marker);
+
+			marker.bindPopup(popupText);
+         }
+	},
+	error: function(jqXHR, textStatus, errorThrown) {
+      console.log(jqXHR);
+   }
+});
+  
+var mymap = L.map('mapid').setView([35.159544, 129.155072], 13);
+var roads = L.gridLayer.googleMutant({
+    type: 'roadmap' // valid values are 'roadmap', 'satellite', 'terrain' and 'hybrid'
+}).addTo(mymap);
+</script>
+</body>
+</html>
