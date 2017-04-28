@@ -31,6 +31,19 @@ html, body, #mapid {
 .legend { padding: 6px 8px; text-align: left; line-height: 18px; color: #555; } 
 .legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
 </style>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://rawgit.com/lvoogdt/Leaflet.awesome-markers/2.0/develop/dist/leaflet.awesome-markers.css">
+<script src="https://rawgit.com/lvoogdt/Leaflet.awesome-markers/2.0/develop/dist/leaflet.awesome-markers.js"></script>
+
 </head>
 <body>
 <div id="mapid"></div>
@@ -60,9 +73,14 @@ info.onAdd = function (map) {
 };
 
 info.update = function (props) {
-	this._div.innerHTML = '<h4>맛집 정보</h4>' +  (props ?
-		'<b>' + props[0] + '</b><br />' +(props[4]?'<i>'+props[4]+'</i><br />':'') + '<a href='+props[3]+' target=_blank>'+props[3]+'</a>'
-		: '마우스를 마커위에 올리세요');
+	
+	if(props){
+		this._div.innerHTML = '<h4>'+props.category+ (props.detailCategory?('('+props.detailCategory+')'):'') +' 정보</h4>';
+		this._div.innerHTML += '<a href='+props.blogUrl+' target=_blank>'+props.name+'</a>';
+		this._div.innerHTML += (props.popupContent?'<br /><i>'+props.popupContent+'</i>':'')
+	} else {
+		this._div.innerHTML += '마우스를 마커위에 올리세요';
+	}
 };
 
 info.addTo(mymap);
@@ -102,9 +120,9 @@ $.ajax({
 });
 
 
+bounds = new L.LatLngBounds();
 
-
-var url="https://etherpad.wikimedia.org/p/"+$.urlParam('target')+"/export/txt"
+var url="https://etherpad.wikimedia.org/p/openmapv2_busan/export/txt";
 //https://etherpad.wikimedia.org/p/openmap_busan/export/txt
 openmap_locData="";
 $.ajax({
@@ -112,37 +130,56 @@ $.ajax({
 	url: url,
 	type: "GET",
 	success: function(data){
-		openmap_locData=eval(data);
-		/*
-		for (var i = 0; i < data.length; i++) {
-			marker = new L.marker([data[i][1],data[i][2]]).bindPopup(planes[i][0]).addTo(mymap);
-		}*/
-		var bounds = new L.LatLngBounds();
-		for (var i=0; i<openmap_locData.length; i++) {
-			console.log(openmap_locData[i]);
-			var popupText = openmap_locData[i][0];
-			var lat = openmap_locData[i][1];
-			var lon = openmap_locData[i][2];
+		eval("openmap_locData=("+data+");");
+		console.log(openmap_locData);
 
-			var markerLocation = new L.LatLng(lat, lon);
-			var marker = new L.Marker(markerLocation);
-			marker.on('mouseover', updateInfo);
-			marker.on('mouseout', removeInfo);
-			marker.on('dblclick', zoomToFeature);
-			mymap.addLayer(marker);
-			
-			marker.bindPopup(popupText);
-			bounds.extend(markerLocation);
-			//if(i==0) mymap.setView(new L.LatLng(lat, lon), findZoom(), { animation: true }); 
-        	}
-		mymap.fitBounds(bounds);
-		 
-
+		var myLayer = L.geoJSON(openmap_locData,
+		{
+			onEachFeature: onEachFeature,
+			pointToLayer: function (feature, latlng) {
+				return L.marker(latlng, {icon: getMarkerStyle(feature.properties)}).on('mouseover', updateInfo).on('mouseout', removeInfo).on('dblclick', zoomToFeature);
+			}
+		}
+		).addTo(mymap);
+		//myLayer.addData(openmap_locData);
+		mymap.fitBounds(bounds, { padding: [40, 40] });
+		bounds='';
 	},
 	error: function(jqXHR, textStatus, errorThrown) {
       console.log(jqXHR);
    }
 });
+
+function getMarkerStyle(prop){
+	switch (prop.category) {
+		case '음식점': 
+			switch (prop.detailCategory) {
+				case '해산물': return L.AwesomeMarkers.icon({icon: 'cutlery', markerColor: 'blue'});
+				case '한식': return L.AwesomeMarkers.icon({icon: 'cutlery', markerColor: 'darkgreen'});
+				case '고기': return L.AwesomeMarkers.icon({icon: 'cutlery', markerColor: 'darkred'});
+				case '일식': return L.AwesomeMarkers.icon({icon: 'cutlery', markerColor: 'orange'});
+			}
+		case '카페': return L.AwesomeMarkers.icon({icon: 'leaf', markerColor: 'red'});
+		case '주류': return L.AwesomeMarkers.icon({icon: 'glass', markerColor: 'cadetblue'});
+		case '명소': return L.AwesomeMarkers.icon({icon: 'picture', markerColor: 'purple'});
+		default: return L.AwesomeMarkers.icon({icon: 'marker', markerColor: 'black'});
+	}
+}
+
+
+function onEachFeature(feature, layer) {
+    // does this feature have a property named popupContent?
+    if (feature.properties && feature.properties.name) {
+        layer.bindPopup(feature.properties.name);
+    }
+	console.log(feature);
+	console.log(layer);
+	bounds.extend(layer._latlng);
+}
+
+function fitBound(){
+	
+}
 
 function findZoom(){
 	for (var i = 0; i < openmap_genesis.length; i++) {
@@ -158,7 +195,7 @@ function updateInfo(e){
 
 	
 	var latlng = e.latlng;
-	var locinfo=findInfo(latlng);
+	var locinfo=e.target.feature.properties;
 	var layer = e.target;
 	/*
 	layer.setStyle({
@@ -184,15 +221,6 @@ function removeInfo(e){
 	//info.update();
 }
 
-function findInfo(latlng){
-	for (var i = 0; i < openmap_locData.length; i++) {
-		if(openmap_locData[i][1]==latlng.lat && openmap_locData[i][2]==latlng.lng) {
-			console.log(openmap_locData[i]);
-			return openmap_locData[i];
-		}
-	}
-}
-	
 function zoomToFeature(e) {
 	var bounds = new L.LatLngBounds();
 	bounds.extend(e.latlng);
