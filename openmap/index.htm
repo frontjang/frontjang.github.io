@@ -87,7 +87,7 @@ info.addTo(mymap);
 
 
 
-
+/*
 var url="https://etherpad.wikimedia.org/p/openmap_genesis/export/txt"
 openmap_genesis=""
 $.ajax({
@@ -118,7 +118,7 @@ $.ajax({
       console.log(jqXHR);
    }
 });
-
+*/
 
 bounds = new L.LatLngBounds();
 
@@ -137,7 +137,7 @@ $.ajax({
 		{
 			onEachFeature: onEachFeature,
 			pointToLayer: function (feature, latlng) {
-				return L.marker(latlng, {icon: getMarkerStyle(feature.properties)}).on('mouseover', updateInfo).on('mouseout', removeInfo).on('dblclick', zoomToFeature);
+				return L.marker(latlng, {icon: getMarkerStyle(feature.properties)}).on('mouseover', updateInfo).on('dblclick', zoomToFeature);
 			}
 		}
 		).addTo(mymap);
@@ -169,56 +169,16 @@ function getMarkerStyle(prop){
 
 function onEachFeature(feature, layer) {
     // does this feature have a property named popupContent?
-    if (feature.properties && feature.properties.name) {
-        layer.bindPopup(feature.properties.name);
-    }
-	console.log(feature);
-	console.log(layer);
+	if (feature.properties && feature.properties.name) {
+		layer.bindPopup(feature.properties.name);
+	}
 	bounds.extend(layer._latlng);
 }
 
-function fitBound(){
-	
-}
-
-function findZoom(){
-	for (var i = 0; i < openmap_genesis.length; i++) {
-		if(openmap_genesis[i][4]==$.urlParam('target')) {
-			console.log(openmap_genesis[i]);
-			return openmap_genesis[i][3];
-		}
-	}
-}
 
 function updateInfo(e){
-	console.log(e);
-
-	
-	var latlng = e.latlng;
 	var locinfo=e.target.feature.properties;
-	var layer = e.target;
-	/*
-	layer.setStyle({
-	weight: 5,
-	color: '#666',
-	dashArray: '',
-	fillOpacity: 0.7
-	});
-
-	if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-		layer.bringToFront();
-	}
-*/
 	info.update(locinfo);
-	
-}
-
-function removeInfo(e){
-	console.log(e);
-	var layer = e.target;
-	
-	//mymap.resetStyle(layer);
-	//info.update();
 }
 
 function zoomToFeature(e) {
