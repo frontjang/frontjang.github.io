@@ -77,6 +77,7 @@ info.update = function (props) {
 	if(props){
 		this._div.innerHTML = '<h4>'+props.category+ (props.detailCategory?('('+props.detailCategory+')'):'') +' 정보</h4>';
 		this._div.innerHTML += '<a href='+props.blogUrl+' target=_blank>'+props.name+'</a>';
+		this._div.innerHTML += (props.address?'<br />'+props.address:'')
 		this._div.innerHTML += (props.popupContent?'<br /><i>'+props.popupContent+'</i>':'')
 	} else {
 		this._div.innerHTML += '마우스를 마커위에 올리세요';
@@ -158,6 +159,7 @@ function getMarkerStyle(prop){
 				case '한식': return L.AwesomeMarkers.icon({icon: 'cutlery', markerColor: 'darkgreen'});
 				case '고기': return L.AwesomeMarkers.icon({icon: 'cutlery', markerColor: 'darkred'});
 				case '일식': return L.AwesomeMarkers.icon({icon: 'cutlery', markerColor: 'orange'});
+				case '레스토랑': return L.AwesomeMarkers.icon({icon: 'cutlery', markerColor: 'purple'});
 			}
 		case '카페': return L.AwesomeMarkers.icon({icon: 'leaf', markerColor: 'red'});
 		case '주류': return L.AwesomeMarkers.icon({icon: 'glass', markerColor: 'cadetblue'});
