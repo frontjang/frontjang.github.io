@@ -123,7 +123,7 @@ $.ajax({
 
 bounds = new L.LatLngBounds();
 
-var url="https://etherpad.wikimedia.org/p/openmapv2_busan/export/txt";
+var url="https://etherpad.wikimedia.org/p/"+$.urlParam('target')+"/export/txt"
 //https://etherpad.wikimedia.org/p/openmap_busan/export/txt
 openmap_locData="";
 $.ajax({
@@ -163,7 +163,7 @@ function getMarkerStyle(prop){
 			}
 		case '숙박': 
 			switch (prop.detailCategory) {
-				case '호텔': return L.AwesomeMarkers.icon({icon: 'hotel', markerColor: 'silver'});
+				case '호텔': return L.AwesomeMarkers.icon({icon: 'hotel', markerColor: 'darkpuple'});
 			}			
 		case '카페': return L.AwesomeMarkers.icon({icon: 'leaf', markerColor: 'red'});
 		case '주류': return L.AwesomeMarkers.icon({icon: 'glass', markerColor: 'cadetblue'});
