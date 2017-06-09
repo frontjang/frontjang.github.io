@@ -88,7 +88,7 @@ info.addTo(mymap);
 
 
 
-/*
+
 var url="https://etherpad.wikimedia.org/p/openmap_genesis/export/txt"
 openmap_genesis=""
 $.ajax({
@@ -119,7 +119,7 @@ $.ajax({
       console.log(jqXHR);
    }
 });
-*/
+
 
 bounds = new L.LatLngBounds();
 
@@ -161,9 +161,14 @@ function getMarkerStyle(prop){
 				case '일식': return L.AwesomeMarkers.icon({icon: 'cutlery', markerColor: 'orange'});
 				case '레스토랑': return L.AwesomeMarkers.icon({icon: 'cutlery', markerColor: 'purple'});
 			}
+		case '숙박': 
+			switch (prop.detailCategory) {
+				case '호텔': return L.AwesomeMarkers.icon({icon: 'hotel', markerColor: 'silver'});
+			}			
 		case '카페': return L.AwesomeMarkers.icon({icon: 'leaf', markerColor: 'red'});
 		case '주류': return L.AwesomeMarkers.icon({icon: 'glass', markerColor: 'cadetblue'});
 		case '명소': return L.AwesomeMarkers.icon({icon: 'picture', markerColor: 'purple'});
+		
 		default: return L.AwesomeMarkers.icon({icon: 'marker', markerColor: 'black'});
 	}
 }
