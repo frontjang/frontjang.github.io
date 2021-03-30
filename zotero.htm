@@ -1,0 +1,15 @@
+<textarea id="dsa"></textarea><input type=button onclick="doUpdate()">
+<div id="asd" style="font-family:Ericsson Hilda"></div>
+
+<script>
+function doUpdate(){
+document.getElementById("asd").innerHTML="";
+	var data=JSON.parse(document.getElementById("dsa").value);
+	for (i=0;i<data.length;i++){
+		var url=(data[i]['url']!="") ? "<a href='"+data[i]['url']+"'>" : "";
+		var title=data[i]['title']
+		var date= (data[i]['date']!="") ? " ("+data[i]['date']+")" : "";
+		document.getElementById("asd").innerHTML+=url+title+(url!=""?"</a>":"")+date+"<p/>";
+	}
+}
+</script>
