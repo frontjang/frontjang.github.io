@@ -1,15 +1,167 @@
-<textarea id="dsa"></textarea><input type=button onclick="doUpdate()">
+<html>
+<head>
+<script src="https://d3js.org/d3.v4.js"></script>
+</head>
+
+<body>
+<textarea id="dsa"></textarea>
+<input type=button onclick="doUpdate()">
 <div id="asd" style="font-family:Ericsson Hilda"></div>
 
 <script>
+var uniqueNDSTitles=[];
+nodes=[];
+links=[];
+
 function doUpdate(){
-document.getElementById("asd").innerHTML="";
-	var data=JSON.parse(document.getElementById("dsa").value);
-	for (i=0;i<data.length;i++){
-		var url=(data[i]['url']!="") ? "<a href='"+data[i]['url']+"'>" : "";
-		var title=data[i]['title']
-		var date= (data[i]['date']!="") ? " ("+data[i]['date']+")" : "";
-		document.getElementById("asd").innerHTML+=url+title+(url!=""?"</a>":"")+date+"<p/>";
+	var data=
+	//var data=JSON.parse(document.getElementById("dsa").value);
+	uniqueNDSTitles.push(data[0].title);
+	nodes.push({"id":data[0].title,"name":data[0].title});
+	document.getElementById("asd").innerHTML+="<h1>Anatomy of "+data[0].title+"</h1>";
+	
+	for (i=1;i<data.length;i++){
+		document.getElementById("asd").innerHTML+=getStr(data[i]);
+		if(data[i].collection=="NDS"){
+			uniqueNDSTitles.push(data[i].title);
+			nodes.push({"id":data[i].title,"name":data[i].title});
+			links.push({"source":data[0].title,"target":data[i].title});
+		}
 	}
+	
+	for (var dat of data){
+		if(dat.collection=="NDS"){
+			var isTouched=false;
+			for (var da of dat.addition){
+				if(uniqueNDSTitles.indexOf(da.title)<0) {
+					if(!isTouched) document.getElementById("asd").innerHTML+="<h3>"+dat.title+"</h3>";
+					document.getElementById("asd").innerHTML+=getStr(da);
+					uniqueNDSTitles.push(da.title);
+					if(da.collection=="NDS"){
+						nodes.push({"id":da.title,"name":da.title});
+						links.push({"source":dat.title,"target":da.title});
+					}
+					isTouched=true;
+				}
+				else {
+					//links.push({"source":dat.title,"target":da.title});
+				}
+			}
+		}
+	}
+	
+	console.log(nodes)
+	console.log(links)
+/*
+jQuery.loadScript = function (url, callback) {
+    jQuery.ajax({
+        url: url,
+        dataType: 'script',
+        success: callback,
+        async: true
+    });
+}
+if (typeof someObject == 'undefined') $.loadScript('', function(){
+    //Stuff to do after someScript has loaded
+*/
+graph={nodes, links};
+
+//console.log(json)
+//console.log(d3)
+var width = 1600,
+    height = 1600
+margin = ({top: 30, right: 80, bottom: 30, left: 30}); 
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) { return d.id; }).strength(0.3))
+    .force("charge", d3.forceManyBody().strength(-700))
+    .force("center", d3.forceCenter(width / 2, height / 2));
+
+
+  var link = svg.append("g")
+      .attr("class", "links")
+    .selectAll("line")
+    .data(graph.links)
+    .enter().append("line")
+      .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+  var node = svg.append("g")
+      .attr("class", "nodes")
+    .selectAll("g")
+    .data(graph.nodes)
+    .enter().append("g")
+    
+  var circles = node.append("circle")
+      .attr("r", 5)
+      .attr("fill", function(d) { return color(d.group); })
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+  var lables = node.append("text")
+      .text(function(d) {
+        return d.id;
+      })
+      .attr('x', 6)
+      .attr('y', 3);
+
+  node.append("title")
+      .text(function(d) { return d.id; });
+
+  simulation
+      .nodes(graph.nodes)
+      .on("tick", ticked);
+
+  simulation.force("link")
+      .links(graph.links);
+
+  function ticked() {
+    link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node
+        .attr("transform", function(d) {
+          return "translate(" + d.x + "," + d.y + ")";
+        })
+  }
+  
+function dragstarted(d) {
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+}
+
+function dragended(d) {
+  if (!d3.event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+//	});
+}
+
+function getStr(data){
+	var result="";
+	var url=(data['url']!="") ? "<a href='"+data['url']+"'>" : "";
+	var title=data['title']
+	var date= (data['date']!="") ? " ("+data['date']+")" : "";
+	result=url+title+(url!=""?"</a>":"")+date+"<p/>";
+	return result;
 }
 </script>
+</body>
+</html>
