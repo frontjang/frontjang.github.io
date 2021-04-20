@@ -5,7 +5,7 @@
 
 <body>
 <textarea id="dsa"></textarea>
-<input type=button onclick="doUpdate()">
+<input type=button onclick="doUpdate()" value="analyze">
 <div id="asd" style="font-family:Ericsson Hilda"></div>
 
 <script>
@@ -14,8 +14,8 @@ nodes=[];
 links=[];
 
 function doUpdate(){
-	var data=
-	//var data=JSON.parse(document.getElementById("dsa").value);
+	//var data=
+	var data=JSON.parse(document.getElementById("dsa").value);
 	uniqueNDSTitles.push(data[0].title);
 	nodes.push({"id":data[0].title,"name":data[0].title});
 	document.getElementById("asd").innerHTML+="<h1>Anatomy of "+data[0].title+"</h1>";
