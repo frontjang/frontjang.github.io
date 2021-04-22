@@ -20,10 +20,9 @@ maximumY=1;
 nodenum=0;	
 	
 function doUpdate(inp){
-	var raw=document.getElementById("dsa").value;
 	var data="";
-	if(raw!="") data=JSON.parse(raw);
-	else data=JSON.parse(inp);
+	if(inp=="") data=JSON.parse(document.getElementById("dsa").value);
+	else data=inp;
 	
 	uniqueNDSTitles.push(data[0].title);
 	processDate(data[0], uniqueDates);
@@ -60,7 +59,7 @@ function doUpdate(inp){
 							if(da.date!=""){
 								var count=processDate(da, uniqueDates);
 								if(count>maximumY)maximumY=count;
-								nodes.push({"id":da.title,"name":da.title,"date":data[0].date,"y":count,"datex":getDateX(da),"nodenum":nodenum++,"parent":dat.title});
+								nodes.push({"id":da.title,"name":da.title,"date":da.date,"y":count,"datex":getDateX(da),"nodenum":nodenum++,"parent":dat.title});
 								links.push({"source":dat.title,"target":da.title});
 							}
 						}
@@ -76,6 +75,11 @@ function doUpdate(inp){
 	
 	uniqueDates=uniqueDates.sort();
 	
+	drawGraph1();
+}
+
+function drawGraph1(){
+
 	var margin = {top: 20, right: 100, bottom: 20, left: 20},
 	width = 1500 - margin.right - margin.left,
 	height = 1500 - margin.top - margin.bottom;
