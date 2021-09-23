@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Custom Popups</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+  <script>
+var url="https://etherpad.wikimedia.org/p/mymap1/export/txt"
+openmap_locData="";
+$.ajax({
+	jsonp: 'jsonp',
+	url: url,
+	type: "GET",
+	success: function(data){
+  var bdy = document.getElementsByTagName("body")[0]; // body 요소
+		openmap_genesis=eval(data);
+		console.log(openmap_genesis);
+			for (var i = 0; i < openmap_genesis.length; i++) {
+        var newDiv = document.createElement("div");
+        //newDiv.setAttribute("alt","2343423423")
+        newDiv.setAttribute("class","content");
+        newDiv.setAttribute("alt",openmap_genesis[i][1]+","+openmap_genesis[i][2]);
+        newDiv.innerHTML="<a href='"+openmap_genesis[i][3]+"' alt='"+openmap_genesis[i][4]+"'>"+openmap_genesis[i][0]+"</a>";
+        console.log(newDiv)
+        bdy.appendChild(newDiv)
+
+        //console.log(openmap_genesis[i][0])
+      }
+      var goo=document.createElement("script");
+      goo.src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly&channel=2";
+      //goo.setAttribute("src","https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly&channel=2");
+      goo.async=true;
+      bdy.appendChild(goo);
+
+      //bdy.appendChild(goo)
+
+	},
+	error: function(jqXHR, textStatus, errorThrown) {
+      console.log(jqXHR);
+   }
+});
+
+
+
+let map, popup, Popup;
+
+/** Initializes the map and the custom popup. */
+window.initMap = function() {
+var contents=document.getElementsByClassName("content");
+//console.log(contents[contents.length-1].getAttribute("alt"))
+var inf=eval("["+contents[contents.length-1].getAttribute("alt")+"]");
+console.log(inf);
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: inf[0], lng: inf[1] },
+    zoom: 11,
+  });
+  
+  var bounds = new google.maps.LatLngBounds();
+  /**
+   * A customized popup on the map.
+   */
+  class Popup extends google.maps.OverlayView {
+    position;
+    containerDiv;
+    constructor(position, content) {
+      super();
+      this.position = position;
+      content.classList.add("popup-bubble");
+
+      // This zero-height div is positioned at the bottom of the bubble.
+      const bubbleAnchor = document.createElement("div");
+
+      bubbleAnchor.classList.add("popup-bubble-anchor");
+      bubbleAnchor.appendChild(content);
+      // This zero-height div is positioned at the bottom of the tip.
+      this.containerDiv = document.createElement("div");
+      this.containerDiv.classList.add("popup-container");
+      this.containerDiv.appendChild(bubbleAnchor);
+      // Optionally stop clicks, etc., from bubbling up to the map.
+      Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
+    }
+    /** Called when the popup is added to the map. */
+    onAdd() {
+      this.getPanes().floatPane.appendChild(this.containerDiv);
+    }
+    /** Called when the popup is removed from the map. */
+    onRemove() {
+      if (this.containerDiv.parentElement) {
+        this.containerDiv.parentElement.removeChild(this.containerDiv);
+      }
+    }
+    /** Called each frame when the popup needs to draw itself. */
+    draw() {
+      const divPosition = this.getProjection().fromLatLngToDivPixel(
+        this.position
+      );
+      // Hide the popup when it is far out of view.
+      const display =
+        Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000
+          ? "block"
+          : "none";
+
+      if (display === "block") {
+        this.containerDiv.style.left = divPosition.x + "px";
+        this.containerDiv.style.top = divPosition.y + "px";
+      }
+
+      if (this.containerDiv.style.display !== display) {
+        this.containerDiv.style.display = display;
+      }
+    }
+  }
+  
+  document.querySelectorAll('.content').forEach((contentDiv, index) => {
+  	var info=eval("["+contentDiv.getAttribute("alt")+"]");
+    var loc=new google.maps.LatLng(info[0],info[1]);
+  popup = new Popup(loc, contentDiv);
+  popup.setMap(map);  
+  bounds.extend(loc);
+  });
+  
+  
+  map.fitBounds(bounds);
+}
+</script>
+<style>
+/* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+#map {
+  height: 100%;
+}
+
+/* Optional: Makes the sample page fill the window. */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* The popup bubble styling. */
+.popup-bubble {
+  /* Position the bubble centred-above its parent. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -100%);
+  /* Style the bubble. */
+  background-color: white;
+  padding: 5px;
+  border-radius: 5px;
+  font-family: sans-serif;
+  overflow-y: auto;
+  max-height: 60px;
+  box-shadow: 0px 2px 10px 1px rgba(0, 0, 0, 0.5);
+}
+
+/* The parent of the bubble. A zero-height div at the top of the tip. */
+.popup-bubble-anchor {
+  /* Position the div a fixed distance above the tip. */
+  position: absolute;
+  width: 100%;
+  bottom: 8px;
+  left: 0;
+}
+
+/* This element draws the tip. */
+.popup-bubble-anchor::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Center the tip horizontally. */
+  transform: translate(-50%, 0);
+  /* The tip is a https://css-tricks.com/snippets/css/css-triangle/ */
+  width: 0;
+  height: 0;
+  /* The tip is 8px high, and 12px wide. */
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid white;
+}
+
+/* JavaScript will position this div at the bottom of the popup tip. */
+.popup-container {
+  cursor: auto;
+  height: 0;
+  position: absolute;
+  /* The max width of the info window. */
+  width: 200px;
+}
+</style>
+  </head>
+  <body>
+    <div id="map"></div>
+    
+    <!--<div class="content" alt="37.1160299, 126.6812742"><a href='https://cafe.naver.com/ca-fe/cafes/30131954/articles/22?oldPath=%2FArticleRead.nhn%3Farticleid%3D22%26clubid%3D30131954' alt='210920'>궁평항</a></div>
+    <div class="content" alt="37.1338345, 126.6800551"><a href='https://cafe.naver.com/ca-fe/cafes/30131954/articles/22?oldPath=%2FArticleRead.nhn%3Farticleid%3D22%26clubid%3D30131954' alt='210920'>야자수마을카페</a></div>
+    <div class="content" alt="37.2226264, 127.1161835"><a href='https://cafe.naver.com/ca-fe/cafes/30131954/articles/22?oldPath=%2FArticleRead.nhn%3Farticleid%3D22%26clubid%3D30131954' alt='210920'>이케아 코리아 기흥점</a></div>
+    <div class="content" alt="37.2364049, 127.1360015"><a href='https://cafe.naver.com/ca-fe/cafes/30131954/articles/22?oldPath=%2FArticleRead.nhn%3Farticleid%3D22%26clubid%3D30131954' alt='210920'>모리 도자기체험 카페</a></div>
+    <div class="content" alt="37.2551581, 127.1240126"><a href='https://cafe.naver.com/ca-fe/cafes/30131954/articles/22?oldPath=%2FArticleRead.nhn%3Farticleid%3D22%26clubid%3D30131954' alt='210920'>안일옥 민속촌점</a></div>
+    -->
+    <!-- Async script executes immediately and must be after any DOM elements used in callback. -->
+    <!--script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly&channel=2"
+      async
+    ></script-->
+  </body>
+</html>
