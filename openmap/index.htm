@@ -19,14 +19,19 @@ $.ajax({
 		openmap_genesis=eval(data);
 		console.log(openmap_genesis);
 			for (var i = 0; i < openmap_genesis.length; i++) {
+
+var coord=openmap_genesis[i][1]+","+openmap_genesis[i][2];				
+var node=document.querySelectorAll(".content[alt='"+coord+']");					   
+if(node.length==1) node[0].innerHTML+="<br><a href='"+openmap_genesis[i][3]+"' alt='"+openmap_genesis[i][4]+"'>"+openmap_genesis[i][4]+" "+openmap_genesis[i][0]+"</a>";
+else {				
         var newDiv = document.createElement("div");
         //newDiv.setAttribute("alt","2343423423")
         newDiv.setAttribute("class","content");
-        newDiv.setAttribute("alt",openmap_genesis[i][1]+","+openmap_genesis[i][2]);
-        newDiv.innerHTML="<a href='"+openmap_genesis[i][3]+"' alt='"+openmap_genesis[i][4]+"'>"+openmap_genesis[i][0]+"</a>";
-        console.log(newDiv)
+        newDiv.setAttribute("alt",coord);
+        newDiv.innerHTML="<a href='"+openmap_genesis[i][3]+"' alt='"+openmap_genesis[i][4]+"'>"+openmap_genesis[i][4]+" "+openmap_genesis[i][0]+"</a>";
+        //console.log(newDiv)
         bdy.appendChild(newDiv)
-
+}
         //console.log(openmap_genesis[i][0])
       }
       var goo=document.createElement("script");
