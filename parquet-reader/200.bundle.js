@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkreact_parquet=self.webpackChunkreact_parquet||[]).push([[200],{200:(a,e,t)=>{t.d(e,{parquetMetadata:()=>r.m5,parquetSchema:()=>r.YR});var r=t(1023)}}]);
